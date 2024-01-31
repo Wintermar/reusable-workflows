@@ -1,0 +1,77 @@
+# This is a shared workflow to deploy servers with ArgoCD CLI
+on:
+  workflow_call:
+    inputs:
+      ARGOCD_URL:
+        type: string
+        required: true
+        description: "The ArgocD URL address."
+      ARGOCD_USERNAME:
+        type: string
+        required: true
+        description: "The ArgoCD username access."
+      ARGOCD_PASSWORD:
+        type: string
+        required: true
+        description: "The ArgoCD password access."
+      ARGOCD_APP_NAME:
+        type: string
+        required: true
+        description: "The ArgoCD application name."
+      HELM_CHART_IMAGE_KEY:
+        type: string
+        required: true
+        description: "The Helm chart values for tag image, e.g. image: or image.tag: depends on your helm chart."
+      DOCKER_IMAGE_TAG:
+        type: string
+        required: true
+        description: "The image tag you want to sync."
+
+env:
+  ARGOCD_CLI_VERSION: 2.6.7
+
+jobs:
+  Argo:
+    runs-on: [onboard-docker-runner-standalone]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Login to ArgoCD
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.ARGOCD_CLI_VERSION }}
+          command: login ${{ inputs.ARGOCD_URL }}
+          options: --username ${{ inputs.ARGOCD_USERNAME }} --password ${{ inputs.ARGOCD_PASSWORD }} --grpc-web --insecure
+
+      - name: Set image tag
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.ARGOCD_CLI_VERSION }}
+          command: app set ${{ inputs.ARGOCD_APP_NAME }}
+          options: -p ${{ inputs.HELM_CHART_IMAGE_KEY }}:${{ inputs.DOCKER_IMAGE_TAG }}
+
+      - name: Sync application
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.ARGOCD_CLI_VERSION }}
+          command: app sync ${{ inputs.ARGOCD_APP_NAME }}
+
+      - name: Wait until the app is healthy
+        id: wait_app
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.ARGOCD_CLI_VERSION }}
+          command: app wait ${{ inputs.ARGOCD_APP_NAME }}
+          options: --grpc-web --sync --operation --health --timeout 600
+
+      - name: Peeking logs
+        uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: ${{ env.ARGOCD_CLI_VERSION }}
+          command: app logs ${{ inputs.ARGOCD_APP_NAME }}
+          options: --group apps --tail 50
+
+      - name: Set exit status
+        run: exit 1
+        if: steps.wait_app.outcome == 'failure'
