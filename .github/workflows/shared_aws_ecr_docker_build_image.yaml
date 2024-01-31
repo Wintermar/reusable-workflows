@@ -56,6 +56,9 @@ on:
         type: string
         required: true
         description: "The Docker image cache tag."
+      DOCKER_IMAGE_STEP_TARGET_TO_CACHE:
+        type: string
+        required: true
 
 env:
   DOCKER_BUILDKIT: 1
@@ -108,7 +111,7 @@ jobs:
         with:
           context: .
           file: ${{ inputs.DOCKERFILE }}
-          target: base
+          target: ${{ inputs.DOCKER_IMAGE_STEP_TARGET_TO_CACHE }}
           push: ${{ inputs.ENABLE_CACHE_PUSH }}
           build-args: BUILDKIT_INLINE_CACHE=1
           tags: ${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:cache-${{ inputs.DOCkER_IMAGE_CACHE_TAG }}
