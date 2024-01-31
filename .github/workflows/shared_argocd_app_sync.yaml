@@ -32,7 +32,7 @@ env:
 
 jobs:
   Argo:
-    runs-on: [onboard-docker-runner-standalone]
+    runs-on: [ubuntu-latest, onboard-docker-runner-standalone]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
