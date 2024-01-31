@@ -79,7 +79,7 @@ jobs:
           IFS=$'\n' read -r -d '' -a array <<<"${{ inputs.SSM_PARAMETER_GENERATED_ENV_TARGETS }}"
           
           for item in "${array[@]}"; do
-            bash ./scripts/aws_ssm_generate_env_file.sh ${{ inputs.SSM_PARAMETER_STORE_PREFIX }} $item
+            curl -sSL https://github.com/Wintermar/reusable-workflows/blob/main/scripts/aws_ssm_generate_env_file.sh | bash -s "${{ inputs.SSM_PARAMETER_STORE_PREFIX }}" "$item"
           done 
 
       - name: Build Docker image
