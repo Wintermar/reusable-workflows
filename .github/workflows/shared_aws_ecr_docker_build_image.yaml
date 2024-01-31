@@ -6,6 +6,15 @@
 on:
   workflow_call:
     inputs:
+      AWS_ACCOUNT_ID:
+        type: string
+        required: true
+      AWS_ACCESS_KEY_ID:
+        type: string
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        type: string
+        required: true
       AWS_REGION:
         type: string
         required: true
@@ -68,8 +77,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ inputs.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -90,8 +99,8 @@ jobs:
           context: .
           file: ${{ inputs.DOCKERFILE }}
           push: ${{ inputs.ENABLE_BUILD_PUSH }}
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:${{ inputs.DOCKER_IMAGE_TAG }}
-          cache-from: type=registry,ref=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:cache-${{ inputs.DOCkER_IMAGE_CACHE_TAG }}
+          tags: ${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:${{ inputs.DOCKER_IMAGE_TAG }}
+          cache-from: type=registry,ref=${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:cache-${{ inputs.DOCkER_IMAGE_CACHE_TAG }}
 
       - name: Save Docker image cache
         uses: docker/build-push-action@v2
@@ -101,4 +110,4 @@ jobs:
           target: base
           push: ${{ inputs.ENABLE_CACHE_PUSH }}
           build-args: BUILDKIT_INLINE_CACHE=1
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:cache-${{ inputs.DOCkER_IMAGE_CACHE_TAG }}
+          tags: ${{ inputs.AWS_ACCOUNT_ID }}.dkr.ecr.${{ inputs.AWS_REGION }}.amazonaws.com/${{ inputs.AWS_ECR_REGISTRY }}:cache-${{ inputs.DOCkER_IMAGE_CACHE_TAG }}
