@@ -86,10 +86,22 @@ jobs:
       - name: Generate .env file from AWS SSM Parameter Store
         if: ${{ inputs.ENABLE_SSM_PARAMETER_STORE_ENV_FILE == true }}
         run: |
-          wget ${{ env.SCRIPTS_URL }}/aws_ssm_generate_env_file.sh -O aws_ssm_generate_env_file.sh
-          chmod a+x aws_ssm_generate_env_file.sh
-          echo ${{ inputs.SSM_PARAMETER_STORE_PREFIX }}
-          ./aws_ssm_generate_env_file.sh ${{ inputs.SSM_PARAMETER_STORE_PREFIX }}
+          rm -rf .env*
+          params=$(aws ssm get-parameters-by-path \
+          --path "${{ inputs.SSM_PARAMETER_STORE_PREFIX }}" \
+          --recursive --with-decryption \
+          --query "Parameters[*].{Name:Name,Value:Value}" \
+          --output json)
+
+          echo -n "" > .env
+
+          for row in $(echo "${params}" | jq -r '.[] | @base64'); do
+              _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+              }
+            key_name=$(echo $(_jq '.Name') | sed "s|^${{ inputs.SSM_PARAMETER_STORE_PREFIX }}/||")
+            echo ${key_name}=$(echo $(_jq '.Value')) >> .env
+          done
 
       - name: Build Docker image
         uses: docker/build-push-action@v3
