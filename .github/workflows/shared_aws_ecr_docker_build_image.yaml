@@ -103,8 +103,6 @@ jobs:
             echo ${key_name}=$(echo $(_jq '.Value')) >> .env
           done
 
-          cat .env
-
       - name: Build Docker image
         uses: docker/build-push-action@v3
         with:
