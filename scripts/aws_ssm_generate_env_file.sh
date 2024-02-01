@@ -2,9 +2,9 @@
 
 rm -rf .env*
 
-local prefix="$1"
+prefix="$1"
 
-local params=$(aws ssm get-parameters-by-path \
+params=$(aws ssm get-parameters-by-path \
 --path "${prefix}" \
 --recursive --with-decryption \
 --query "Parameters[*].{Name:Name,Value:Value}" \
