@@ -88,6 +88,7 @@ jobs:
         run: |
           wget ${{ env.SCRIPTS_URL }}/aws_ssm_generate_env_file.sh -O aws_ssm_generate_env_file.sh
           chmod a+x aws_ssm_generate_env_file.sh
+          echo ${{ inputs.SSM_PARAMETER_STORE_PREFIX }}
           ./aws_ssm_generate_env_file.sh ${{ inputs.SSM_PARAMETER_STORE_PREFIX }}
 
       - name: Build Docker image
